@@ -13,15 +13,23 @@
 
 ## 🎮 How to Get Started
 
-1.  **Install the Extension**: Get it from the Chrome Web Store (link to be added).
-2.  **Navigate to a CSES Problem**: Go to any problem on the [CSES Problemset](https://cses.fi/problemset/).
-3.  **Start Coding**: The CSES Companion interface will appear below the problem statement. Write your code in the integrated editor.
-4.  **Test Your Solution**: Use the "Run" button to test your code against the provided sample cases. The results will be displayed below the editor.
-5.  **Submit Your Code**: Once you're confident in your solution, click the "Submit" button. The extension will handle the submission process for you.
+1.  **Download or Clone the Repository**: Get the extension's code on your local machine.
+2.  **Load the Extension in Chrome**:
+    *   Open Chrome and navigate to `chrome://extensions`.
+    *   Enable "Developer mode" in the top right corner.
+    *   Click on "Load unpacked".
+    *   Select the directory where you downloaded/cloned the repository.
+3.  **Configure API Key**:
+    *   After loading the extension, click its icon in the Chrome toolbar and select "Options", or right-click the icon and choose "Options".
+    *   On the options page, enter your Judge0 RapidAPI key. You can get a free key from [RapidAPI](https://rapidapi.com/judge0-official/api/judge0-ce). This is required for the "Run" functionality.
+4.  **Navigate to a CSES Problem**: Go to any problem on the [CSES Problemset](https://cses.fi/problemset/).
+5.  **Start Coding**: The CSES Companion interface will appear below the problem statement. Write your code in the integrated editor.
+6.  **Test Your Solution**: Use the "Run" button to test your code against the provided sample cases. The results will be displayed below the editor.
+7.  **Submit Your Code**: Once you're confident in your solution, click the "Submit" button. The extension will handle the submission process for you.
 
-## ✅ Status
+<!-- ## ✅ Status
 
-This project is **complete and fully functional**. All core features have been implemented and tested.
+This project is **complete and fully functional**. All core features have been implemented and tested. -->
 
 ## 🤝 Contributing
 

@@ -4,7 +4,7 @@
     return;
   }
 
-  const JUDGE0_API_KEY = '000636f0e6msh89b22bef2b7f565p1a9420jsnd6b1b410425d';
+  
 
   // 2. Create and inject CSS styles
   const styles = `
@@ -326,67 +326,70 @@
     const outputContent = document.getElementById('cses-companion-output-content');
     if (!outputContent) return;
 
-    if (JUDGE0_API_KEY === 'YOUR_RAPIDAPI_KEY') {
-      outputContent.textContent = 'Please replace YOUR_RAPIDAPI_KEY in content.js with your actual RapidAPI key for Judge0.';
-      return;
-    }
-
     outputContent.textContent = 'Running...';
 
-    if (sampleCases.length === 0) {
-      outputContent.textContent = 'No sample cases found to run against.';
-      return;
-    }
-
-    const selectedLanguage = languageSelector.value;
-    const languageId = languages[selectedLanguage].judge0Id;
-    const sourceCode = code;
-    const stdin = sampleCases[0].input;
-
-    const options = {
-      method: 'POST',
-      headers: {
-        'x-rapidapi-key': JUDGE0_API_KEY,
-        'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        language_id: languageId,
-        source_code: sourceCode,
-        stdin: stdin
-      })
-    };
-
-    console.log('Judge0 API Request Options:', options);
-
-    try {
-      const response = await fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', options);
-      console.log('Judge0 API Response:', response);
-      const result = await response.json();
-      console.log('Judge0 API Result:', result);
-
-      if (response.ok) {
-        displayResult(result);
-      } else {
-        let errorText = `Error: ${result.message || 'Failed to create submission.'}`;
-        switch (response.status) {
-          case 401:
-            errorText = "Error: Invalid API key. Please check your Judge0 API key in content.js.";
-            break;
-          case 402:
-            errorText = "Error: API key quota exceeded. Please check your Judge0 plan and billing details.";
-            break;
-          case 429:
-            errorText = "Error: Rate limit exceeded. Please wait a moment and try again.";
-            break;
+    // Get API Key from storage
+    chrome.storage.local.get(['judge0ApiKey'], async (result) => {
+        if (chrome.runtime.lastError || !result.judge0ApiKey) {
+            const optionsUrl = chrome.runtime.getURL('options/options.html');
+            outputContent.innerHTML = `Error: Judge0 API Key not found. Please set it in the <a href="${optionsUrl}" target="_blank">extension options</a>.`;
+            return;
         }
-        console.error('Judge0 API Error:', result);
-        outputContent.textContent = `${errorText} (Status: ${response.status}). See https://rapidapi.com/judge0-official/api/judge0-ce/details for more information.`;
-      }
-    } catch (error) {
-      console.error('Fetch Error:', error);
-      outputContent.textContent = `Error: ${error.message}`;
-    }
+
+        const JUDGE0_API_KEY = result.judge0ApiKey;
+
+        if (sampleCases.length === 0) {
+            outputContent.textContent = 'No sample cases found to run against.';
+            return;
+        }
+
+        const selectedLanguage = languageSelector.value;
+        const languageId = languages[selectedLanguage].judge0Id;
+        const sourceCode = code;
+        const stdin = sampleCases[0].input;
+
+        const options = {
+            method: 'POST',
+            headers: {
+                'x-rapidapi-key': JUDGE0_API_KEY,
+                'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                language_id: languageId,
+                source_code: sourceCode,
+                stdin: stdin
+            })
+        };
+
+        try {
+            const response = await fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', options);
+            const result = await response.json();
+
+            if (response.ok) {
+                displayResult(result);
+            } else {
+                let errorText = `Error: ${result.message || 'Failed to create submission.'}`;
+                 switch (response.status) {
+                    case 401:
+                        const optionsUrl = chrome.runtime.getURL('options/options.html');
+                        errorText = `Error: Invalid API key. Please check your Judge0 API key in the <a href="${optionsUrl}" target="_blank">extension options</a>.`;
+                        break;
+                    case 402:
+                        errorText = "Error: API key quota exceeded. Please check your Judge0 plan and billing details.";
+                        break;
+                    case 429:
+                        errorText = "Error: Rate limit exceeded. Please wait a moment and try again.";
+                        break;
+                }
+                console.error('Judge0 API Error:', result);
+                outputContent.innerHTML = `${errorText} (Status: ${response.status}). See https://rapidapi.com/judge0-official/api/judge0-ce/details for more information.`;
+            }
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            outputContent.textContent = `Error: ${error.message}`;
+        }
+    });
   }
 
   function displayResult(result) {

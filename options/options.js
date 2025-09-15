@@ -86,4 +86,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     renderTemplates();
+
+    const apiKeyInput = document.getElementById('api-key');
+    const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+    const apiKeyStatus = document.getElementById('api-key-status');
+
+    // Load API Key
+    chrome.storage.local.get(['judge0ApiKey'], (result) => {
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+            return;
+        }
+        if (result.judge0ApiKey) {
+            apiKeyInput.value = result.judge0ApiKey;
+        }
+    });
+
+    // Save API Key
+    saveApiKeyBtn.addEventListener('click', () => {
+        const apiKey = apiKeyInput.value.trim();
+        if (apiKey) {
+            chrome.storage.local.set({ 'judge0ApiKey': apiKey }, () => {
+                if (chrome.runtime.lastError) {
+                    apiKeyStatus.textContent = 'Error saving key.';
+                    apiKeyStatus.style.color = 'red';
+                    console.error(chrome.runtime.lastError);
+                } else {
+                    apiKeyStatus.textContent = 'API Key saved!';
+                    apiKeyStatus.style.color = 'green';
+                    setTimeout(() => {
+                        apiKeyStatus.textContent = '';
+                    }, 3000);
+                }
+            });
+        } else {
+            // If the user clears the input and saves, remove the key from storage
+            chrome.storage.local.remove('judge0ApiKey', () => {
+                 if (chrome.runtime.lastError) {
+                    apiKeyStatus.textContent = 'Error removing key.';
+                    apiKeyStatus.style.color = 'red';
+                    console.error(chrome.runtime.lastError);
+                } else {
+                    apiKeyStatus.textContent = 'API Key removed.';
+                    apiKeyStatus.style.color = 'orange';
+                    setTimeout(() => {
+                        apiKeyStatus.textContent = '';
+                    }, 3000);
+                }
+            });
+        }
+    });
 });
