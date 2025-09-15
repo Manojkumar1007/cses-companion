@@ -12,7 +12,7 @@
         const csesLanguage = csesLanguages[language];
 
         // Find the language select first, then get its form
-        const languageSelect = document.querySelector('select[name="language"]');
+        const languageSelect = document.querySelector('select[name="lang"]');
         if (!languageSelect) {
           console.error('CSES Companion: Language select not found.');
           return;
