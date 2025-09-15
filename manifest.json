@@ -8,17 +8,21 @@
     "activeTab",
     "scripting"
   ],
+  "host_permissions": [
+    "https://judge0-ce.p.rapidapi.com/"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://cses.fi/problemset/task/*",
-        "https://cses.fi/problemset/submit/*"
-      ],
+      "matches": ["https://cses.fi/problemset/task/*"],
       "js": ["content/content.js"],
       "css": ["styles/editor.css"]
+    },
+    {
+      "matches": ["https://cses.fi/problemset/submit/*"],
+      "js": ["content/submission.js"]
     }
   ],
   "action": {

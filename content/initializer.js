@@ -33,6 +33,7 @@
           } else if (type === 'cses-companion-set-font') {
             editor.updateOptions({ fontSize: fontSize });
           } else if (type === 'cses-companion-get-code') {
+            console.log('Getting code for submission...');
             const value = editor.getValue();
             window.postMessage({ type: 'cses-companion-response-code', code: value }, '*');
           } else if (type === 'cses-companion-insert-code') {
@@ -40,6 +41,12 @@
           } else if (type === 'cses-companion-get-code-for-save') {
             const value = editor.getValue();
             window.postMessage({ type: 'cses-companion-response-code-for-save', code: value }, '*');
+          } else if (type === 'cses-companion-get-code-for-run') {
+            const value = editor.getValue();
+            window.postMessage({ type: 'cses-companion-response-code-for-run', code: value }, '*');
+          } else if (type === 'cses-companion-get-code-for-submit') {
+            const value = editor.getValue();
+            window.postMessage({ type: 'cses-companion-response-code-for-submit', code: value }, '*');
           }
         });
 
