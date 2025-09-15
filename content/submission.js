@@ -4,7 +4,6 @@
       if (chrome.runtime?.id && result.codeToSubmit) {
         const { code, language, filename } = result.codeToSubmit;
 
-        // Map our language codes to CSES language values
         const csesLanguages = {
           'cpp': 'C++',
           'java': 'Java',
@@ -12,19 +11,23 @@
         };
         const csesLanguage = csesLanguages[language];
 
-        const form = document.querySelector('form[action*="/submit"]');
+        // Find the language select first, then get its form
+        const languageSelect = document.querySelector('select[name="language"]');
+        if (!languageSelect) {
+          console.error('CSES Companion: Language select not found.');
+          return;
+        }
+
+        const form = languageSelect.form;
         if (!form) {
           console.error('CSES Companion: Submission form not found.');
           return;
         }
 
-        // Select the language
-        const languageSelect = form.querySelector('select[name="language"]');
-        if (languageSelect && csesLanguage) {
+        if (csesLanguage) {
           languageSelect.value = csesLanguage;
         }
 
-        // Create and inject the file
         try {
           const file = new File([code], filename, { type: 'text/plain' });
           const dataTransfer = new DataTransfer();
@@ -33,8 +36,6 @@
 
           if (fileInput) {
             fileInput.files = dataTransfer.files;
-
-            // Clear the stored code and submit
             chrome.storage.local.remove('codeToSubmit', () => {
               form.submit();
             });
