@@ -89,6 +89,11 @@
       word-wrap: break-word;
       min-height: 50px;
     }
+    #cses-editor-container {
+      margin-top: 0px;
+      margin-bottom: 20px;
+    }
+
   `;
   const styleSheet = document.createElement("style");
   styleSheet.type = "text/css";
@@ -159,11 +164,8 @@
     <div id="cses-companion-output-content"></div>
   `;
 
-  mainContainer.append(toolbar, editorContainer, outputContainer);
-
-  // 4. Inject UI into the page
+  // 4. Structure UI elements for proper positioning
   const contentArea = document.querySelector('.content') || document.body;
-  contentArea.prepend(mainContainer);
 
   const originalForm = document.querySelector('form[action^="/problemset/"]');
   if (originalForm) {
@@ -176,6 +178,7 @@
   let sampleCases = [];
 
   function scrapeAndDisplaySampleCases() {
+    // Create sample containers first
     const samplesContainer = document.createElement('div');
     samplesContainer.id = 'cses-companion-samples-container';
     
@@ -224,11 +227,122 @@
         `;
         samplesContainer.appendChild(sampleCaseDiv);
       });
-      mainContainer.insertBefore(samplesContainer, outputContainer);
+    }
+    
+    // Insert all elements in the required order after problem description
+    const mdElement = document.querySelector('.md');
+    if (mdElement) {
+      const parent = mdElement.parentNode;
+      
+      // Add toolbar right after problem description
+      parent.insertBefore(toolbar, mdElement.nextSibling);
+      
+      // Add editor container after the toolbar
+      parent.insertBefore(editorContainer, toolbar.nextSibling);
+      
+      // Add samples container after the editor
+      parent.insertBefore(samplesContainer, editorContainer.nextSibling);
+      
+      // Add output container after samples
+      parent.insertBefore(outputContainer, samplesContainer.nextSibling);
     }
   }
 
   scrapeAndDisplaySampleCases();
+
+  // Function to detect website theme and update editor accordingly
+  function updateEditorTheme() {
+    // Check for dark theme indicators on the website
+    const bodyStyle = window.getComputedStyle(document.body);
+    const bgColor = bodyStyle.backgroundColor;
+    
+    // Check for CSS classes that indicate dark theme
+    const hasDarkClass = document.body.classList.contains('dark-theme') || 
+                        document.body.classList.contains('dark');
+    
+    // Calculate brightness from RGB values to determine if it's a dark theme
+    const bgColorMatch = bgColor.match(/\d+,\s*\d+,\s*\d+/);
+    let isDarkTheme = true; // Default to dark
+    
+    if (bgColorMatch) {
+      const [r, g, b] = bgColorMatch[0].split(',').map(n => parseInt(n.trim()));
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      isDarkTheme = brightness < 128 || hasDarkClass;
+    } else {
+      // If we can't parse the color, make a reasonable guess based on common dark theme indicators
+      isDarkTheme = bgColor.includes('25, 25, 25') || 
+                    bgColor.includes('30, 30, 30') || 
+                    bgColor.includes('18, 18, 18') || 
+                    bgColor.includes('0, 0, 0') ||
+                    hasDarkClass;
+    }
+    
+    // Send theme update message to the editor
+    window.postMessage({ 
+      type: 'cses-companion-update-theme', 
+      isDarkTheme: isDarkTheme 
+    }, '*');
+  }
+
+  // Initial theme update
+  updateEditorTheme();
+
+  // Set up a more comprehensive MutationObserver to detect theme changes
+  // Watch for changes to body, html, and other potential theme containers
+  const observer = new MutationObserver(function(mutations) {
+    let themeChanged = false;
+    for (const mutation of mutations) {
+      if (mutation.type === 'attributes') {
+        // Check for changes to common theme-related attributes
+        if (mutation.attributeName === 'class' || 
+            mutation.attributeName === 'style' || 
+            mutation.attributeName === 'data-theme') {
+          themeChanged = true;
+          break;
+        }
+      }
+    }
+    if (themeChanged) {
+      setTimeout(updateEditorTheme, 100); // Small delay to ensure DOM is updated
+    }
+  });
+
+  // Observe multiple potential theme containers
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class', 'style', 'data-theme']
+  });
+  
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class', 'style', 'data-theme']
+  });
+  
+  // Also set up a periodic check as a fallback to catch theme changes
+  // that might not trigger DOM mutations
+  let lastThemeCheck = null;
+  
+  function checkForThemeChange() {
+    const currentStyle = window.getComputedStyle(document.body);
+    const currentBgColor = currentStyle.backgroundColor;
+    const currentColor = currentStyle.color;
+    
+    // Create a signature of the current theme state
+    const themeSignature = `${currentBgColor}-${currentColor}`;
+    
+    if (lastThemeCheck && lastThemeCheck !== themeSignature) {
+      // Theme has changed
+      setTimeout(updateEditorTheme, 100);
+    }
+    
+    lastThemeCheck = themeSignature;
+    
+    // Schedule the next check
+    setTimeout(checkForThemeChange, 1000); // Check every second
+  }
+  
+  // Start the periodic check
+  setTimeout(checkForThemeChange, 1000);
 
   // Load saved code
   chrome.storage.local.get(savedCodeKey, (result) => {
